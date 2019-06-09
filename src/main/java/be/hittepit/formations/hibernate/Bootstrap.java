@@ -1,24 +1,37 @@
 package be.hittepit.formations.hibernate;
 
-import be.hittepit.formations.hibernate.entities.Personne;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Bootstrap {
-    public SessionFactory doit() {
-        StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-                .configure( "hibernate.cfg.xml" )
-                .build();
+    private SessionFactory sessionFactory;
 
-        Metadata metadata = new MetadataSources( standardRegistry )
-                .addAnnotatedClass( Personne.class )
-                .getMetadataBuilder()
-                .build();
+    private List<Class<?>> entityClasses;
 
-        return metadata.getSessionFactoryBuilder()
-                .build();
+    public Bootstrap(Class<?>... entityClasses) {
+        this.entityClasses = Arrays.asList(entityClasses);
+    }
+
+    public SessionFactory getSessionFactory() {
+        if(sessionFactory == null) {
+            StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
+                    .configure("hibernate.cfg.xml")
+                    .build();
+
+            MetadataSources metadataSources = new MetadataSources(standardRegistry);
+            for(Class<?> clazz:entityClasses) {
+                metadataSources.addAnnotatedClass(clazz);
+            }
+            Metadata metadata = metadataSources.getMetadataBuilder().build();
+
+            sessionFactory = metadata.getSessionFactoryBuilder().build();
+        }
+        return sessionFactory;
     }
 }
